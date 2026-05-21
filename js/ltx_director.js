@@ -3705,7 +3705,7 @@ class TimelineEditor {
 
         const bufferNode = this.audioContext.createBufferSource();
         bufferNode.buffer = audioBuffer;
-        bufferNode.connect(this.audioContext.destination);
+        bufferNode["connect"](this.audioContext.destination);
 
         const startTime = this.audioContext.currentTime + waitTimeSec;
         bufferNode.start(startTime, fileOffsetSec, playDurationSec);
