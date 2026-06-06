@@ -409,15 +409,6 @@ class LTXDirector(io.ComfyNode):
                     "use_custom_audio", default=False, optional=True,
                     tooltip="Toggle between using timeline audio (ON) and generating audio from scratch (OFF).",
                 ),
-                io.Float.Input(
-                    "audio_env_strength", default=0.0, min=0.0, max=1.0, step=0.01, optional=True,
-                    tooltip=(
-                        "Only used when use_custom_audio is ON. 0.0 = strictly keep the uploaded audio "
-                        "(original behaviour, no model-generated sound). >0 leaves room on the audio track "
-                        "so the model can ADD prompt-described ambience/SFX (e.g. wind, footsteps, room tone) "
-                        "on top of your audio. Try 0.2~0.4 for subtle ambience while keeping the voice intact."
-                    ),
-                ),
                 io.String.Input(
                     "local_prompts", multiline=True, default="",
                     tooltip="Auto-populated from the timeline editor.",
@@ -464,6 +455,15 @@ class LTXDirector(io.ComfyNode):
                 io.Int.Input(
                     "img_compression", default=18, min=0, max=100, step=1, optional=True,
                     tooltip="H.264 CRF compression to apply to each guide image. 0 = no compression, higher = more artefacts.",
+                ),
+                io.Float.Input(
+                    "audio_env_strength", default=0.0, min=0.0, max=1.0, step=0.01, optional=True,
+                    tooltip=(
+                        "Only used when use_custom_audio is ON. 0.0 = strictly keep the uploaded audio "
+                        "(original behaviour, no model-generated sound). >0 leaves room on the audio track "
+                        "so the model can ADD prompt-described ambience/SFX (e.g. wind, footsteps, room tone) "
+                        "on top of your audio. Try 0.2~0.4 for subtle ambience while keeping the voice intact."
+                    ),
                 ),
             ],
             outputs=[
