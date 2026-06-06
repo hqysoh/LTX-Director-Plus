@@ -27,7 +27,7 @@ NODE_CLASS_MAPPINGS = {
     "SpeechLengthCalculator": SpeechLengthCalculator,
     "LoadAudioUI": LoadAudioUI,
     "LoadVideoUI": LoadVideoUI,
-    "LTXDirector": LTXDirector,
+    "LTXDirectorPlus": LTXDirector,
     "LTXDirectorGuide": LTXDirectorGuide,
 }
 
@@ -38,7 +38,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SpeechLengthCalculator": "Speech Length Calculator",
     "LoadAudioUI": "Load Audio UI",
     "LoadVideoUI": "Load Video UI",
-    "LTXDirector": "LTX Director",
+    "LTXDirectorPlus": "LTX Director Plus",
     "LTXDirectorGuide": "LTX Director Guide",
 }
 

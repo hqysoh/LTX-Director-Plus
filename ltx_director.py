@@ -376,8 +376,8 @@ class LTXDirector(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(
-            node_id="LTXDirector",
-            display_name="LTX Director",
+            node_id="LTXDirectorPlus",
+            display_name="LTX Director Plus",
             category="WhatDreamsCost",
             description=(
                 "Same as Prompt Relay Encode, but local prompts and segment lengths are edited "
@@ -408,6 +408,15 @@ class LTXDirector(io.ComfyNode):
                 io.Boolean.Input(
                     "use_custom_audio", default=False, optional=True,
                     tooltip="Toggle between using timeline audio (ON) and generating audio from scratch (OFF).",
+                ),
+                io.Float.Input(
+                    "audio_env_strength", default=0.0, min=0.0, max=1.0, step=0.01, optional=True,
+                    tooltip=(
+                        "Only used when use_custom_audio is ON. 0.0 = strictly keep the uploaded audio "
+                        "(original behaviour, no model-generated sound). >0 leaves room on the audio track "
+                        "so the model can ADD prompt-described ambience/SFX (e.g. wind, footsteps, room tone) "
+                        "on top of your audio. Try 0.2~0.4 for subtle ambience while keeping the voice intact."
+                    ),
                 ),
                 io.String.Input(
                     "local_prompts", multiline=True, default="",
@@ -474,7 +483,7 @@ class LTXDirector(io.ComfyNode):
                 frame_rate=24, display_mode="seconds",
                 custom_width=768, custom_height=512, resize_method="maintain aspect ratio",
                 divisible_by=32, img_compression=0, audio_vae=None, optional_latent=None,
-                use_custom_audio=False) -> io.NodeOutput:
+                use_custom_audio=False, audio_env_strength=0.0) -> io.NodeOutput:
 
         # --- Build guide_data from image segments FIRST (to derive output dimensions) ---
         guide_data = {"images": [], "insert_frames": [], "strengths": [], "frame_rate": frame_rate}
@@ -620,21 +629,26 @@ class LTXDirector(io.ComfyNode):
                         if latent_samples.numel() == 0:
                             raise ValueError("Encoded audio latent is empty (0 elements).")
                         
-                        # 2. Create solid mask with value 0.0 (0 means keep/use conditioning, 1 means generate noise)
+                        # 2. Create noise mask.
+                        #    0.0 = keep/use conditioning (strictly your uploaded audio),
+                        #    1.0 = fully generate noise (model invents audio).
+                        #    audio_env_strength lets the model ADD prompt-described ambience/SFX
+                        #    on top of your audio while still anchoring to it. Clamp to [0, 1].
+                        env = float(max(0.0, min(1.0, audio_env_strength)))
                         mask = torch.full(
-                            (1, latent_samples.shape[-2], latent_samples.shape[-1]), 
-                            0.0, 
-                            dtype=torch.float32, 
+                            (1, latent_samples.shape[-2], latent_samples.shape[-1]),
+                            env,
+                            dtype=torch.float32,
                             device=comfy.model_management.intermediate_device()
                         )
-                        
+
                         # 3. Set Latent Noise Mask
                         audio_latent = {
                             "samples": latent_samples,
                             "type": "audio",
                             "noise_mask": mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1]))
                         }
-                        log.info("[PromptRelay] Generated custom audio latent with noise mask (value=0.0).")
+                        log.info("[PromptRelay] Generated custom audio latent with noise mask (value=%.3f).", env)
                     else:
                         raise ValueError("No audio waveform to encode.")
                 except Exception as e:
@@ -653,9 +667,9 @@ class LTXDirector(io.ComfyNode):
 
 
 NODE_CLASS_MAPPINGS = {
-    "LTXDirector": LTXDirector,
+    "LTXDirectorPlus": LTXDirector,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PromptRelayEncodeTimeline": "Prompt Relay Encode (Timeline)",
+    "LTXDirectorPlus": "LTX Director Plus",
 }
